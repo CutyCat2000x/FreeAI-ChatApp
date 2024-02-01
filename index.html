@@ -142,8 +142,16 @@
     const inputBox = document.querySelector('.input-box');
     inputBox.addEventListener('keydown', function (event) {
       if (event.key === 'Enter') {
-        sendMessage();
-      }
+        const userMessage = inputBox.value;
+        inputBox.disabled = True;
+        sentButton.disabled = True;
+        displayMessage('User', userMessage);
+        inputBox.value = '';
+        fetch(`https://api.splittic.app/api/reply?auth=${apiKey}&message=${encodeURIComponent(userMessage)}&chatid=${chatId}`)
+          .then(response => response.text())
+          .then(chatGPTResponse => displayMessage('ChatGPT', chatGPTResponse))
+          .catch(error => console.error('API Error:', error));
+        }
     });
     const sendButton = document.querySelector('.send-button');
     const mainContainer = document.querySelector('.main');
@@ -155,6 +163,8 @@
     }
     sendButton.addEventListener('click', function () {
       const userMessage = inputBox.value;
+      inputBox.disabled = True;
+      sentButton.disabled = True;
       displayMessage('User', userMessage);
       inputBox.value = '';
       fetch(`https://api.splittic.app/api/reply?auth=${apiKey}&message=${encodeURIComponent(userMessage)}&chatid=${chatId}`)
@@ -169,6 +179,8 @@
       messageContainer.innerHTML = `${sender}: <div class="message-content">${parsedMessage}</div>`;
       mainContainer.appendChild(messageContainer);
       scrollToBottom();
+      inputBox.disabled = False;
+      sentButton.disabled = False;
       if (message == "Invalid API key") {
         openModal();
       }
