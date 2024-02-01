@@ -140,12 +140,20 @@
     const apiKey = localStorage.getItem('apiKey');
     let chatId = generateChatId();
     const inputBox = document.querySelector('.input-box');
+    const sendButton = document.querySelector('.send-button');
     inputBox.addEventListener('keydown', function (event) {
       if (event.key === 'Enter') {
-        sendMessage();
-      }
+        const userMessage = inputBox.value;
+        inputBox.disabled = true;
+        sendButton.disabled = true;
+        displayMessage('User', userMessage);
+        inputBox.value = '';
+        fetch(`https://api.splittic.app/api/reply?auth=${apiKey}&message=${encodeURIComponent(userMessage)}&chatid=${chatId}`)
+          .then(response => response.text())
+          .then(chatGPTResponse => displayMessage('MeowGPT', chatGPTResponse))
+          .catch(error => console.error('API Error:', error));
+        }
     });
-    const sendButton = document.querySelector('.send-button');
     const mainContainer = document.querySelector('.main');
     function scrollToBottom() {
       mainContainer.scrollTop = mainContainer.scrollHeight;
@@ -155,11 +163,13 @@
     }
     sendButton.addEventListener('click', function () {
       const userMessage = inputBox.value;
+      inputBox.disabled = true;
+      sendButton.disabled = true;
       displayMessage('User', userMessage);
       inputBox.value = '';
       fetch(`https://api.splittic.app/api/reply?auth=${apiKey}&message=${encodeURIComponent(userMessage)}&chatid=${chatId}`)
         .then(response => response.text())
-        .then(chatGPTResponse => displayMessage('ChatGPT', chatGPTResponse))
+        .then(chatGPTResponse => displayMessage('MeowGPT', chatGPTResponse))
         .catch(error => console.error('API Error:', error));
     });
     function displayMessage(sender, message) {
@@ -169,6 +179,11 @@
       messageContainer.innerHTML = `${sender}: <div class="message-content">${parsedMessage}</div>`;
       mainContainer.appendChild(messageContainer);
       scrollToBottom();
+      if (sender == "MeowGPT"){
+        inputBox.disabled = false;
+        sendButton.disabled = false;
+        inputBox.focus();
+      }
       if (message == "Invalid API key") {
         openModal();
       }
